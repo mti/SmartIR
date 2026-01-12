@@ -324,6 +324,7 @@ class SmartIRLight(LightEntity, RestoreEntity):
             try:
                 for _ in range(count):
                     await self._controller.send(remote_cmd)
+                    await asyncio.sleep(self._delay)
             except Exception as e:
                 _LOGGER.exception(e)
 
