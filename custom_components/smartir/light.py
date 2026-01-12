@@ -35,6 +35,7 @@ CONF_CONTROLLER_DATA = "controller_data"
 CONF_CONTROLLER_TYPE = "controller_type"
 CONF_DELAY = "delay"
 CONF_POWER_SENSOR = "power_sensor"
+CONF_POWER_SENSOR = "poweron_max"
 
 CMD_BRIGHTNESS_INCREASE = "brighten"
 CMD_BRIGHTNESS_DECREASE = "dim"
@@ -53,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_CONTROLLER_DATA): cv.string,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.string,
         vol.Optional(CONF_POWER_SENSOR): cv.entity_id,
+        vol.Optional(CONF_POWERON_MAX, default=True): cv.boolean,
     }
 )
 
@@ -97,6 +99,7 @@ class SmartIRLight(LightEntity, RestoreEntity):
         self._controller_data = config.get(CONF_CONTROLLER_DATA)
         self._delay = config.get(CONF_DELAY)
         self._power_sensor = config.get(CONF_POWER_SENSOR)
+        self._poweron_max = config.get(CONF_POWERON_MAX)
 
         self._manufacturer = device_data["manufacturer"]
         self._supported_models = device_data["supportedModels"]
@@ -131,6 +134,9 @@ class SmartIRLight(LightEntity, RestoreEntity):
             self._support_brightness = True
             if self._support_color_mode == ColorMode.UNKNOWN:
                 self._support_color_mode = ColorMode.BRIGHTNESS
+            if self._poweron_max:
+              self._brightness = 255
+
         else:
             self._support_brightness = False
 
@@ -223,10 +229,12 @@ class SmartIRLight(LightEntity, RestoreEntity):
     async def async_turn_on(self, **params):
         did_something = False
         # Turn the light on if off
-        if self._power != STATE_ON and not self._on_by_remote:
+        if (self._power != STATE_ON and not self._on_by_remote) or (self._poweron_max and self._brightness == 1):
             self._power = STATE_ON
             did_something = True
             await self.send_command(CMD_POWER_ON)
+            if self._poweron_max and self._support_brightness:
+                self._brightness = 255
 
         if (
             ATTR_COLOR_TEMP_KELVIN in params
@@ -302,6 +310,8 @@ class SmartIRLight(LightEntity, RestoreEntity):
         if not did_something and not self._on_by_remote:
             self._power = STATE_ON
             await self.send_command(CMD_POWER_ON)
+            if self._poweron_max and self._support_brightness:
+                self._brightness = 255
 
         self.async_write_ha_state()
 
