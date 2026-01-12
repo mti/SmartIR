@@ -35,7 +35,7 @@ CONF_CONTROLLER_DATA = "controller_data"
 CONF_CONTROLLER_TYPE = "controller_type"
 CONF_DELAY = "delay"
 CONF_POWER_SENSOR = "power_sensor"
-CONF_POWER_SENSOR = "poweron_max"
+CONF_POWERON_MAX = "poweron_max"
 
 CMD_BRIGHTNESS_INCREASE = "brighten"
 CMD_BRIGHTNESS_DECREASE = "dim"
